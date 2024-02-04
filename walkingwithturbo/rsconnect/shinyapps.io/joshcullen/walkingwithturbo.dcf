@@ -1,0 +1,12 @@
+name: walkingwithturbo
+title: walkingwithturbo
+username: joshcullen
+account: joshcullen
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 11126626
+bundleId: 8217567
+url: https://joshcullen.shinyapps.io/walkingwithturbo/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

@@ -1,0 +1,5 @@
+project:
+  title: "Walking_with_Turbo"
+  resources: 
+    - shinylive-sw.js
+
