@@ -7,8 +7,10 @@ library(highcharter)
 library(shiny)
 library(bslib)
 
+
 source("Process GPX data.R")
 source("Convert images to jpeg.R")
+source("utils.R")
 
 
 ## Load data
@@ -44,18 +46,22 @@ start_coords <- tracks_summary[nrow(tracks_summary),] |>
 
 ## UI
 ui <- page_sidebar(
+  tags$head(tags$style(HTML('.bslib-page-title {font-size: 3rem;
+                            background-color: #006D6F;
+                            color: #FADA5E;}',
+                            '.bslib-value-box .value-box-title {font-size: 1.3rem}'))),
+  
   theme = bs_theme(bootswatch = "materia",
                    version = 5,
                    fg = "#141635",
                    bg = "#FFF",
-                   base_font = font_google("Lato")),
+                   base_font = font_google("Love Ya Like A Sister")),
   title = "Walks with Turbo",
   sidebar = sidebar(
     width = 350,
     # class = "bg-secondary",
     selectInput('track_date', 'Choose a track:', 
                 tracks_summary$date, tracks_summary$date[nrow(tracks_summary)]),
-    br(),
     tags$iframe(
       style="border-radius:12px", 
       src="https://open.spotify.com/embed/track/6XK6Zw6JkFsHXzAcMWNiIr?utm_source=generator", 
@@ -71,11 +77,11 @@ ui <- page_sidebar(
       nrow(tracks_summary),
       showcase = icon("paw", class = 'fa-3x'),
       # showcase_layout = "top right",
-      height = "100px",
-      theme = "info"
+      theme = value_box_theme(bg = "#006D6F", fg = "#FADA5E"),
+      height = "100px"
     )
   ),
-  card(leafletOutput("map")),
+  card(leafletOutput("map"), full_screen = TRUE),
   card(highchartOutput("elev_prof"))
 )
 
@@ -177,9 +183,10 @@ server <- function(input, output, session) {
                                                        bringToFront = TRUE,
                                                        weight = 4),
                    group = "Selected Track") |>
-      addLegend(title = "Elevation (ft)",
+      addLegend_decreasing(title = "Elevation (ft)",
                 pal = elev.pal,
-                values = range(tracks_fine_r()$elevation))
+                values = range(tracks_fine_r()$elevation),
+                decreasing = TRUE)
   })
   
   

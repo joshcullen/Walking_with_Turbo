@@ -5,7 +5,7 @@ account: joshcullen
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11126626
-bundleId: 8217567
+bundleId: 8241448
 url: https://joshcullen.shinyapps.io/walkingwithturbo/
 version: 1
 asMultiple: FALSE
