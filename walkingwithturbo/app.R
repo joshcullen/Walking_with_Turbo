@@ -64,7 +64,7 @@ ui <- page_sidebar(
                 tracks_summary$date, tracks_summary$date[nrow(tracks_summary)]),
     tags$iframe(
       style="border-radius:12px", 
-      src="https://open.spotify.com/embed/track/6XK6Zw6JkFsHXzAcMWNiIr?utm_source=generator", 
+      src="https://open.spotify.com/embed/playlist/1Y9ZG5Au7ujuE143KIdXQl?utm_source=generator&theme=0", 
       width="100%", 
       height="152", 
       frameBorder="0", 
