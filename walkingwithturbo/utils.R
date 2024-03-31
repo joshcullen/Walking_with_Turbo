@@ -1,5 +1,5 @@
 
-# Parse the GPX file
+# Parse the GPX file (using {purrr} and {XML})
 
 parse_gpx = function() {
   

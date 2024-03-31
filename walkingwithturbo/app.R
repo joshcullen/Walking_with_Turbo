@@ -1,11 +1,16 @@
 
+# Refer to https://repo.r-wasm.org for packages supported by shinylive/webR
+
 library(tidyverse)
 library(sf)
 library(leaflet)
 library(sfarrow)
-library(highcharter)
+library(dygraphs)
 library(shiny)
 library(bslib)
+library(duckplyr)
+# library(ggiraph)
+
 
 
 source("Process GPX data.R")
@@ -25,7 +30,7 @@ tracks_fine <- st_read_parquet("Data_processed/tracks.parquet") |>
 
 tracks_summary <- tracks_fine |> 
   summarize(.by = date,
-            across(line_seg, st_union),
+            across(geometry, st_union),
             duration = difftime(last(datetime), first(datetime), units = "mins") |> 
               round(2),
             distance = max(cumul_dist, na.rm = TRUE) |> 
@@ -82,7 +87,7 @@ ui <- page_sidebar(
     )
   ),
   card(leafletOutput("map"), full_screen = TRUE),
-  card(highchartOutput("elev_prof"))
+  card(dygraphOutput("elev_prof"))
 )
 
 
@@ -108,14 +113,14 @@ server <- function(input, output, session) {
   # Create reactive objects
   tracks_fine_r <- reactive({
     tracks_fine |> 
-      filter(date == input$track_date) |> 
+      duckplyr::filter(date == input$track_date) |> 
       drop_na(elevation)
   })
   
   # Remove selected track from summary df
   tracks_summary2 <- reactive({
     tracks_summary |> 
-      filter(date != input$track_date)
+      duckplyr::filter(date != input$track_date)
   })
   
   
@@ -196,28 +201,44 @@ server <- function(input, output, session) {
   
   observe({
     # Elevation profile
-    elev_plot <- highchart() |> 
-      hc_add_series(data = tracks_fine_r(),
-                    hcaes(x = round(cumul_dist, 2), y = elevation),
-                    type = "spline",
-                    # name = "<b>Elevation (ft)</b>",
-                    color = "firebrick",
-                    lineWidth = 5,
-                    tooltip = list(pointFormat = "<b>Elevation (ft):</b> {point.elevation}")
-      ) |> 
-      hc_xAxis(title = list(text = "Distance (miles)",
-                            style = list(fontSize = 20)),
-               labels = list(style = list(fontSize = 15))) |> 
-      hc_yAxis(title = list(text = "Elevation (ft)",
-                            style = list(fontSize = 20)),
-               labels = list(style = list(fontSize = 15))) |> 
-      hc_legend(enabled = FALSE) |> 
-      hc_tooltip(crosshairs = TRUE,
-                 headerFormat = "<b>Distance (miles):</b> {point.key}<br>"
-      )
+    # elev_plot <- highchart() |> 
+    #   hc_add_series(data = tracks_fine_r(),
+    #                 hcaes(x = round(cumul_dist, 2), y = elevation),
+    #                 type = "spline",
+    #                 # name = "<b>Elevation (ft)</b>",
+    #                 color = "firebrick",
+    #                 lineWidth = 5,
+    #                 tooltip = list(pointFormat = "<b>Elevation (ft):</b> {point.elevation}")
+    #   ) |> 
+    #   hc_xAxis(title = list(text = "Distance (miles)",
+    #                         style = list(fontSize = 20)),
+    #            labels = list(style = list(fontSize = 15))) |> 
+    #   hc_yAxis(title = list(text = "Elevation (ft)",
+    #                         style = list(fontSize = 20)),
+    #            labels = list(style = list(fontSize = 15))) |> 
+    #   hc_legend(enabled = FALSE) |> 
+    #   hc_tooltip(crosshairs = TRUE,
+    #              headerFormat = "<b>Distance (miles):</b> {point.key}<br>"
+    #   )
+    elev_plot <- dygraph(tracks_fine_r() |> 
+                           st_drop_geometry() |> 
+                           duckplyr::select(cumul_dist, elevation) |> 
+                           duckplyr::mutate(cumul_dist = round(cumul_dist, 2))) |> 
+      dySeries(strokeWidth = 4, color = "firebrick", label = "Elevation (ft)") |> 
+      dyAxis("y", label = "Elevation (ft)", axisLabelFontSize = 15, axisLabelWidth = 50,
+             labelWidth = 25) |> 
+      dyAxis("x", label = "Distance (miles)", axisLabelFontSize = 15, axisLabelWidth = 50,
+             labelHeight = 25) |> 
+      dyOptions(axisLineWidth = 2, drawGrid = FALSE) |> 
+      dyHighlight(highlightCircleSize = 5,
+                  highlightSeriesBackgroundAlpha = 0.2,
+                  hideOnMouseOut = FALSE) |> 
+      dyCrosshair(direction = "vertical") |> 
+      dyLegend(width = 150, show = "always", labelsSeparateLines = TRUE)
     
     
-    output$elev_prof <- renderHighchart(elev_plot)
+    # output$elev_prof <- renderHighchart(elev_plot)
+    output$elev_prof <- renderDygraph(elev_plot)
   })
   
   
