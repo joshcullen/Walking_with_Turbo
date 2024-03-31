@@ -10,6 +10,7 @@ library(shiny)
 library(bslib)
 library(duckplyr)
 # library(ggiraph)
+library(reactable)
 
 
 
@@ -87,7 +88,7 @@ ui <- page_sidebar(
     )
   ),
   card(leafletOutput("map"), full_screen = TRUE),
-  card(dygraphOutput("elev_prof"))
+  layout_column_wrap(card(reactableOutput("tbl")), card(dygraphOutput("elev_prof")))
 )
 
 
@@ -239,6 +240,31 @@ server <- function(input, output, session) {
     
     # output$elev_prof <- renderHighchart(elev_plot)
     output$elev_prof <- renderDygraph(elev_plot)
+  })
+  
+  
+  
+  # Summary table
+  output$tbl <- renderReactable({
+    reactable(data = st_drop_geometry(tracks_summary),
+              defaultColDef = colDef(
+                # header = function(value) gsub(".", " ", value, fixed = TRUE),
+                # cell = function(value) format(value, nsmall = 1),
+                align = "center",
+                minWidth = 70,
+                headerStyle = list(background = "#f7f7f8")
+              ),
+              defaultSorted = list(date = "desc"),
+              filterable = TRUE,
+              defaultPageSize = 6,
+              paginationType = "jump",
+              columns = list(
+                date = colDef(name = "Date", align = "left", style = list(fontWeight = 800)),
+                duration = colDef(name = "Duration (min)"),
+                distance = colDef(name = "Distance (mi)"),
+                elev_gain = colDef(name = "Elevation Gain (ft)")
+              )
+    )
   })
   
   
