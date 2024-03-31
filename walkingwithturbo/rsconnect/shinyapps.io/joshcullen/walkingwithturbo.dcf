@@ -5,8 +5,9 @@ account: joshcullen
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11126626
-bundleId: 8305168
+bundleId: 8438265
 url: https://joshcullen.shinyapps.io/walkingwithturbo/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: Convert images to jpeg.R|Data_processed/tracks.parquet|Process GPX data.R|Data|raw_img
