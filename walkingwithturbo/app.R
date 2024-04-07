@@ -77,7 +77,8 @@ ui <- page_sidebar(
       allowfullscreen="", 
       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture", 
       loading="lazy"),
-    imageOutput("photo"),
+    # imageOutput("photo"),
+    htmlOutput("picture", fill = "container"),
     value_box(
       title = "Number of walks",
       nrow(tracks_summary),
@@ -102,13 +103,21 @@ server <- function(input, output, session) {
   #   # value <- isolate(input$dynamic)
   #   img(src = paste0(input$track_date, ".jpeg"), align = "center")
   # })
-  output$photo <- renderImage({
-    filename <- paste0("www/", input$track_date, ".jpeg")
-    list(src = filename,
-         width = 300,
-         height = 400,
-         align = "center")
-  }, deleteFile = FALSE)
+  # output$photo <- renderImage({
+  #   filename <- paste0("www/", input$track_date, ".jpeg")
+  #   list(src = filename,
+  #        width = 300,
+  #        height = 400,
+  #        align = "center")
+  # }, deleteFile = FALSE)
+  
+  output$picture <- renderText({
+    src <- paste0("https://github.com/joshcullen/Walking_with_Turbo/blob/main/walkingwithturbo/www/",
+                  input$track_date,
+                  ".jpeg?raw=true")
+    
+    c('<img src="',src,'">')
+    })
   
   
   # Create reactive objects
