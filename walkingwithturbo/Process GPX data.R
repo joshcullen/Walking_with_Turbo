@@ -4,7 +4,7 @@
 library(tidyverse)
 library(sf)
 library(elevatr)
-library(sfarrow)
+# library(sfarrow)
 
 source("utils.R")
 
@@ -26,7 +26,8 @@ tracks_all <- map(gpx_files, st_read, layer = "track_points") |>
   nest(.by = date)
 
 # Previously processed tracks
-tracks_old <- st_read_parquet("Data_processed/tracks.parquet") |> 
+tracks_old <- st_read("Data_processed/tracks.parquet", use_stream = TRUE) |> 
+  mutate(datetime = as_datetime(datetime, tz = "America/New_York")) |> 
   nest(.by = date)
 
 
@@ -79,7 +80,8 @@ if (nrow(tracks_new) != 0) {
                            relocate(datetime, date, time, elevation),
                          tracks_new_sf3)
   
-  st_write_parquet(tracks_update, "Data_processed/tracks.parquet")
+  st_write(tracks_update, "Data_processed/tracks.parquet", use_stream = TRUE,
+           append = FALSE, driver = "Parquet")
   
 }
 

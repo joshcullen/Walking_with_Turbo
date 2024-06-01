@@ -4,7 +4,7 @@
 library(tidyverse)
 library(sf)
 library(leaflet)
-library(sfarrow)
+# library(sfarrow)
 library(dygraphs)
 library(shiny)
 library(bslib)
@@ -20,7 +20,7 @@ source("utils.R")
 
 
 ## Load data
-tracks_fine <- st_read_parquet("https://github.com/joshcullen/Walking_with_Turbo/raw/main/walkingwithturbo/Data_processed/tracks.parquet") |> 
+tracks_fine <- st_read("https://github.com/joshcullen/Walking_with_Turbo/raw/main/walkingwithturbo/Data_processed/tracks.parquet") |> 
   split(~date) |> 
   map(~mutate(.x,
               sl = as.numeric(st_length(.x)),
