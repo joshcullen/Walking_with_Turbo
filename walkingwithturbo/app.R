@@ -1,7 +1,9 @@
 
 # Refer to https://repo.r-wasm.org for packages supported by shinylive/webR
 
-library(tidyverse)
+library(dplyr)
+library(purrr)
+library(tidyr)
 library(sf)
 library(leaflet)
 # library(sfarrow)
@@ -46,26 +48,62 @@ start_coords <- tracks_summary[nrow(tracks_summary),] |>
   st_coordinates()
 
 
-# track.pal <- colorFactor(palette = "Spectral", domain = unique(tracks_summary$date))
+# Define date as numeric for creating summary popover map
+tracks_summary$date1 <- as.numeric(as.Date(tracks_summary$date))
+date.pal <- colorNumeric(palette = "viridis",
+                         domain = tracks_summary$date1)
+
+# Define summary map
+summary_map <- leaflet(tracks_summary, width = "600px") |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addPolylines(color = ~date.pal(date1),
+               opacity = 0.7,
+               weight = 3,
+               label = ~paste0("<b>Date:</b> ", date,
+                               "<br> <b>Duration (min):</b> ", duration,
+                               "<br> <b>Distance (miles):</b> ", distance,
+                               "<br> <b>Elevation gain (ft):</b> ", elev_gain) |>
+                 lapply(htmltools::HTML),
+               labelOptions = labelOptions(style = list(
+                 "font-size" = "14px")),
+               highlightOptions = highlightOptions(opacity = 1,
+                                                   bringToFront = TRUE,
+                                                   weight = 5)) |> 
+  addLegend_decreasing("bottomright", pal = date.pal, values = ~date1, 
+                       title = "Date", opacity = 1, decreasing = TRUE,
+                       labFormat = myLabelFormat(dates = TRUE))
 
 
 
 ## UI
 ui <- page_sidebar(
-  tags$head(tags$style(HTML('.bslib-page-title {font-size: 3rem;
-                            background-color: #006D6F;
-                            color: #FADA5E;}',
-                            '.bslib-value-box .value-box-title {font-size: 1.3rem}'))),
+  # tags$head(tags$style(HTML(
+  # '.bslib-page-title {font-size: 3rem;
+  #                     background-color: #006D6F;
+  #                     color: #FADA5E;}',
+  # '.bslib-value-box .value-box-title {font-size: 1.3rem}'))),
   
   theme = bs_theme(bootswatch = "materia",
                    version = 5,
                    fg = "#141635",
                    bg = "#FFF",
-                   base_font = font_google("Love Ya Like A Sister")),
+                   base_font = font_google("Love Ya Like A Sister"),
+                   "navbar-bg" = "#006D6F",
+                   "navbar-light-brand-color" = "#FADA5E !important",
+                   "navbar-padding-y" = "0.5rem") |> 
+    bs_add_rules(c(".my-pop { max-width: none; }",
+                 ".navbar-brand { font-size: 40px; }",
+                 ".bslib-value-box .value-box-title { font-size: 1.3rem !important}")),
   title = "Walks with Turbo",
   sidebar = sidebar(
     width = 350,
     # class = "bg-secondary",
+    popover(
+      bsicons::bs_icon("map-fill", title = "All Tracks", size = "2rem"),
+      title = "All Tracks",
+      options = list(customClass = "my-pop"),
+      summary_map
+      ),
     selectInput('track_date', 'Choose a track:', 
                 tracks_summary$date, tracks_summary$date[nrow(tracks_summary)]),
     tags$iframe(
@@ -128,10 +166,10 @@ server <- function(input, output, session) {
   })
   
   # Remove selected track from summary df
-  tracks_summary2 <- reactive({
-    tracks_summary |> 
-      duckplyr::filter(date != input$track_date)
-  })
+  # tracks_summary2 <- reactive({
+  #   tracks_summary |> 
+  #     duckplyr::filter(date != input$track_date)
+  # })
   
   
   
@@ -145,7 +183,7 @@ server <- function(input, output, session) {
     addProviderTiles(provider = providers$OpenStreetMap, group = "Open Street Map",
                      options = tileOptions(zIndex = -10)) |>
     addLayersControl(baseGroups = c("World Imagery", "Open Street Map"),
-                     overlayGroups = c("Tracks","Selected Track"),
+                     overlayGroups = c("Selected Track"),
                      options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) |>
     addScaleBar(position = "bottomleft")
   
@@ -169,21 +207,21 @@ server <- function(input, output, session) {
                 max(st_coordinates(tracks_fine_r())[,1]),
                 max(st_coordinates(tracks_fine_r())[,2])
       ) |>
-      addPolylines(data = tracks_summary2(),
-                   color = "lightgrey",
-                   opacity = 0.7,
-                   weight = 3,
-                   label = ~paste0("<b>Date:</b> ", date,
-                                   "<br> <b>Duration (min):</b> ", duration,
-                                   "<br> <b>Distance (miles):</b> ", distance,
-                                   "<br> <b>Elevation gain (ft):</b> ", elev_gain) |>
-                     lapply(htmltools::HTML),
-                   labelOptions = labelOptions(style = list(
-                     "font-size" = "14px")),
-                   highlightOptions = highlightOptions(opacity = 1,
-                                                       bringToFront = TRUE,
-                                                       weight = 5),
-                   group = "Tracks") |> 
+      # addPolylines(data = tracks_summary2(),
+      #              color = "lightgrey",
+      #              opacity = 0.7,
+      #              weight = 3,
+      #              label = ~paste0("<b>Date:</b> ", date,
+      #                              "<br> <b>Duration (min):</b> ", duration,
+      #                              "<br> <b>Distance (miles):</b> ", distance,
+      #                              "<br> <b>Elevation gain (ft):</b> ", elev_gain) |>
+      #                lapply(htmltools::HTML),
+      #              labelOptions = labelOptions(style = list(
+      #                "font-size" = "14px")),
+      #              highlightOptions = highlightOptions(opacity = 1,
+      #                                                  bringToFront = TRUE,
+      #                                                  weight = 5),
+      #              group = "Tracks") |> 
       addPolylines(data = tracks_fine_r(),
                    color = ~elev.pal(elevation),
                    opacity = 0.5,

@@ -4,7 +4,8 @@
 library(tidyverse)
 library(sf)
 library(elevatr)
-# library(sfarrow)
+library(sfarrow)
+library(XML)
 
 source("utils.R")
 
@@ -14,15 +15,14 @@ source("utils.R")
 #################
 
 # Select all .gpx files
-gpx_files <- dir(path = "Data", full.names = TRUE)
+# gpx_files <- dir(path = "Data", full.names = TRUE)
 
 # Read in GPX files
-tracks_all <- map(gpx_files, st_read, layer = "track_points") |> 
+tracks_all <- parse_gpx() |> 
   bind_rows() |> 
-  dplyr::select(time) |> 
-  mutate(datetime = time,
-         date = as_date(time),
-         time = str_extract(time, "[0-9]{2}:[0-9]{2}:[0-9]{2}")) |> 
+  mutate(date = as_date(datetime),
+         time = str_extract(datetime, "[0-9]{2}:[0-9]{2}:[0-9]{2}")) |> 
+  st_as_sf(coords = c("lon","lat")) |> 
   nest(.by = date)
 
 # Previously processed tracks
@@ -80,11 +80,12 @@ if (nrow(tracks_new) != 0) {
                            relocate(datetime, date, time, elevation),
                          tracks_new_sf3)
   
-  st_write(tracks_update, "Data_processed/tracks.parquet", use_stream = TRUE,
-           append = FALSE, driver = "Parquet")
+  # st_write(tracks_update, "Data_processed/tracks.parquet", use_stream = TRUE,
+  #          append = FALSE, driver = "Parquet")
+  st_write_parquet(tracks_update, "Data_processed/tracks.parquet")
   
 }
 
 ### Remove all intermediate objects
-rm(tracks_all, tracks_new, tracks_old, parse_gpx)
+# rm(tracks_all, tracks_new, tracks_old, parse_gpx)
 

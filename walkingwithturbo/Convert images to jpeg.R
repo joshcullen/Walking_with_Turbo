@@ -30,12 +30,12 @@ ind <- which(!all %in% processed)
 if (length(ind) > 0) {  #only write files for unprocessed images
   
   # Change file types and directory path
-  new_names <- gsub(x = files, pattern = "\\.HEIC$", ".jpeg")
+  new_names <- gsub(x = files[ind], pattern = "\\.HEIC$", ".jpeg")
   new_names <- gsub(x = new_names, pattern = "raw_img", "www")
   
   # Export new images
-  for (i in 1:length(files)) {
-    image_write(img[i], path = new_names[i], format = "jpeg", quality = 75)
+  for (i in 1:length(files[ind])) {
+    image_write(img[ind[i]], path = new_names[i], format = "jpeg", quality = 75)
   }
   
 }

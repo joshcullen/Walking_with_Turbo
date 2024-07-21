@@ -140,3 +140,14 @@ addLegend_decreasing <- function (map,
                  layerId = layerId, className = className, group = group)
   invokeMethod(map, data, "addLegend", legend)
 }
+
+#-------------------------------
+
+# Function to transform dates from numeric to Date format
+myLabelFormat = function(..., dates = FALSE){
+  if(dates){
+    function(type = "numeric", cuts){
+      as.Date(cuts, origin="1970-01-01")}
+  } else {
+    labelFormat(...) }
+}
