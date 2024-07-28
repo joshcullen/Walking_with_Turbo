@@ -77,6 +77,7 @@ if (nrow(tracks_new) != 0) {
   # Merge w/ tracks_old
   tracks_update <- rbind(unnest(tracks_old, cols = data) |> 
                            st_as_sf(crs = 4326) |> 
+                           # st_cast("LINESTRING") |> 
                            relocate(datetime, date, time, elevation),
                          tracks_new_sf3)
   
